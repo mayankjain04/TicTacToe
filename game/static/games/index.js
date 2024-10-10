@@ -44,6 +44,12 @@ function Home({ showPage }) {
     }
 }
 
+function Cell({ board, count, updateBoard }) {
+    return (
+        <div onClick={() => board[count] === null && updateBoard(count)} class={board[count] === null ? 'game-box' : 'game-box disabled'}>{board[count]}</div>
+    )
+}
+
 function Lobby({ player_1, showPage }) {
     if (!player_1 || player_1.length === 0) {
         player_1 = 'playerone'
@@ -74,31 +80,8 @@ function Lobby({ player_1, showPage }) {
     const storedMove = parseInt(localStorage.getItem('move'));
     console.log(`the current lobby is ${lobby_id} and played moves are ${storedMove}`)
 
-    return (
-        <div class="d-flex flex-column align-items-center justify-content-center">
-            <div class="mb-3">Lobby name: <span class="text-primary">{lobby_id}</span></div>
-            <button class="btn btn-primary mb-3" onClick={() => showPage('home')}>Home</button>
-            <div class="d-flex flex-column align-items-center justify-content-center">
-                <div class="d-flex flex-row">
-                    <div onClick={() => updateBoard(0)} class="game-box">{board[0]}</div>
-                    <div onClick={() => updateBoard(1)} class="game-box">{board[1]}</div>
-                    <div onClick={() => updateBoard(2)} class="game-box">{board[2]}</div>
-                </div>
-                <div class="d-flex flex-row">
-                    <div onClick={() => updateBoard(3)} class="game-box">{board[3]}</div>
-                    <div onClick={() => updateBoard(4)} class="game-box">{board[4]}</div>
-                    <div onClick={() => updateBoard(5)} class="game-box">{board[5]}</div>
-                </div>
-                <div class="d-flex flex-row">
-                    <div onClick={() => updateBoard(6)} class="game-box">{board[6]}</div>
-                    <div onClick={() => updateBoard(7)} class="game-box">{board[7]}</div>
-                    <div onClick={() => updateBoard(8)} class="game-box">{board[8]}</div>
-                </div>
-            </div>
-        </div>
-    )
-    // to POST the data to the sever and update
-    function updateBoard(index) {
+    // to update the board for client and send it to server
+    const updateBoard = (index) => {
         const move = parseInt(localStorage.getItem('move'));
         console.log(`board before move no ${move + 1}: ${board}`);
         const newboard = [...board];
@@ -106,11 +89,39 @@ function Lobby({ player_1, showPage }) {
         setBoard(newboard);
         console.log(`board after move no ${move + 1}: ${newboard}`);
         localStorage.setItem('move', move + 1);
-        uploadBoard(newboard, move);
+        uploadBoard(newboard, move+1, index); // this function sends the data to the server
         // setTimeout(() => {
         //     fetchBoard(lobby_id);
         // }, 1000);
     }
+
+    return (
+        <div class="d-flex flex-column align-items-center justify-content-center">
+            <div class="d-flex flex-row align-items-center justify-content-center">
+                <button class="btn btn-primary mb-3" onClick={() => showPage('home')}>Home</button>
+                <button class="btn btn-primary mb-3">Forfeit</button>
+            </div>
+            <div class="mb-3">Lobby name: <span class="text-primary">{lobby_id}</span></div>
+            <div class="d-flex flex-column align-items-center justify-content-center">
+                <div class="d-flex flex-row">
+                    <Cell board={board} updateBoard={updateBoard} count={0} />
+                    <Cell board={board} updateBoard={updateBoard} count={1} />
+                    <Cell board={board} updateBoard={updateBoard} count={2} />
+                </div>
+                <div class="d-flex flex-row">
+                    <Cell board={board} updateBoard={updateBoard} count={3} />
+                    <Cell board={board} updateBoard={updateBoard} count={4} />
+                    <Cell board={board} updateBoard={updateBoard} count={5} />
+                </div>
+                <div class="d-flex flex-row">
+                    <Cell board={board} updateBoard={updateBoard} count={6} />
+                    <Cell board={board} updateBoard={updateBoard} count={7} />
+                    <Cell board={board} updateBoard={updateBoard} count={8} />
+                </div>
+            </div>
+        </div>
+    )
+
     // to alternate bw X and O
     function playermark(move) {
         if ((move + 1) % 2 == 0) {
@@ -120,18 +131,16 @@ function Lobby({ player_1, showPage }) {
         }
     }
 
-    function uploadBoard(board, move) {
+    function uploadBoard(board, move, index) {
         fetch(`api/gamedata/${lobby_id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                lobby_id: lobby_id,
-                player_1: 'mayank',
-                player_2: 'mello',
-                current_turn: move,
-                moves: board
+                currentTurn: move,
+                index:index,
+                playermark: board[index]
             })
         })
             .then(response => response.json())
@@ -171,7 +180,7 @@ function Join({ showPage }) {
         fetch(`/api/gamedata/${lobbyName}`, {
             method: 'POST',
             body: JSON.stringify({
-                player_2:player_2,
+                player_2: player_2,
             })
         })
             .then(response => {

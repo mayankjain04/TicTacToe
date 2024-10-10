@@ -24,6 +24,10 @@
     justify-content: center;
 }
 
+.disabled {
+    background-color: rgb(0, 197, 197);
+}
+
 .game-box:hover {
     background-color: rgb(0, 227, 227);
 }
