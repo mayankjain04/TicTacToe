@@ -15,15 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-
-from . import views
-
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name='index'),
-    # path('online', views.online, name='online'),
-    path('game', views.game, name='game'),
-    path('gamedata/<int:lobby_id>', views.gamedata, name='gamedata')
+    path('', include('tictactoe.urls')),
 ]
