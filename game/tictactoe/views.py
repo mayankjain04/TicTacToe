@@ -8,13 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 def index(request):
     return render(request, 'game/index.html')
 
-def game(request):
-    return HttpResponseRedirect('index')
-
 @csrf_exempt
-def gamedata(request, lobby_id):
-    # this is when a client wants to access or create a lobby
-    if request.method == 'GET':
+def creategame(request, lobby_id):
+    # this is when a client wants to update or create a lobby
+    if request.method == 'POST':
         # data = {
         #     'lobby_id':lobby_id,
         #     'player_1':None,
@@ -22,16 +19,17 @@ def gamedata(request, lobby_id):
         #     'currentTurn':0,
         #     'moves':[None, None, None, None, None, None, None, None, None]
         # }
-        game, created = Game.objects.update_or_create(lobby_id=lobby_id)
+        data = json.loads(request.body)
+        game, created = Game.objects.update_or_create(lobby_id=lobby_id, gameInfo=data)
         return JsonResponse({'success':f'Lobby {lobby_id} {'created' if created else 'updated'} successfully', 'gameInfo':game.gameInfo}, status=201)
+
+
+@csrf_exempt
+def gamedata(request, lobby_id):
     # this is when the client makes a post request to create/update a lobby
     if request.method == 'POST':
         data = json.loads(request.body)
         lobby = get_object_or_404(Game, lobby_id=lobby_id)
-        # if (lobby_id==''):
-        #     return JsonResponse({error:'The lobby named {lobby_id} does not exist!'},
-        #      status=404)
-        lobby.gameInfo = data
+        lobby.gameInfo['player_2'] = data.get('player_2', '')
         lobby.save()
-        return JsonResponse({'success': f'Lobby {lobby_id} updated successfully'}, status=200)
-
+        return JsonResponse({'success': f'Lobby {lobby_id} updated successfully', 'gameInfo':lobby.gameInfo}, status=200)
