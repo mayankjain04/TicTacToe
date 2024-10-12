@@ -16,7 +16,7 @@ def creategame(request, lobby_id):
         #     'lobby_id':lobby_id,
         #     'player_1':None,
         #     'player_2':None,
-        #     'currentTurn':0,
+        #     'lastTurn':0,
         #     'moves':[None, None, None, None, None, None, None, None, None]
         # }
         data = json.loads(request.body)
@@ -34,8 +34,8 @@ def gamedata(request, lobby_id):
         if data.get('player_2'):
             lobby.gameInfo['player_2'] = data.get('player_2', '')
         # this line updates the database when a player makes a move
-        if data.get('currentTurn'):
+        if data.get('lastTurn'):
             lobby.gameInfo['moves'][data.get('index')] = data.get('playermark', '?')
-            lobby.gameInfo['currentTurn'] = data.get('currentTurn')
+            lobby.gameInfo['lastTurn'] = data.get('lastTurn')
         lobby.save()
         return JsonResponse({'success': f'Lobby {lobby_id} updated successfully', 'gameInfo':lobby.gameInfo}, status=200)
